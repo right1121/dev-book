@@ -1,0 +1,41 @@
+version: '3'
+services: 
+    api:
+        build:
+            context: .
+            dockerfile: ./docker/flask/Dockerfile
+        command: python3 /api/run.py
+        volumes:
+            - ./api:/api
+        ports:
+            - 9000:9000
+        links:
+            - db
+        environment:
+            TZ: Asia/Tokyo
+            FLASK_APP: run
+            FLASK_ENV: development
+        tty: true
+    front:
+        build:
+            context: .
+            dockerfile: ./docker/nuxt/Dockerfile
+        volumes:
+            - ./nuxt:/app
+            - node_modules_volume:/app/node_modules
+        tty: true
+        ports:
+            - "9001:3000"
+        command: sh /api/dev-init.sh
+    db:
+        build:
+            context: .
+            dockerfile: ./docker/mysql/Dockerfile
+        volumes:
+            - ./docker/mysql/mysql_data:/var/lib/mysql # データの永続化
+            - ./docker/mysql/sqls:/docker-entrypoint-initdb.d # 初期化時に実行するSQL
+        environment:
+            - MYSQL_ROOT_PASSWORD=password # パスワード
+
+volumes:
+  node_modules_volume:
